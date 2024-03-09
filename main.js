@@ -37,29 +37,58 @@ phina.define("MainScene", {
         // this.elem  = PlainElement({width: SCREEN_X,height: SCREEN_Y}).addChildTo(this)
         // this.elem.setPosition(SCREEN_X/2, SCREEN_Y/2);
         // this.elem.canvas.translate( 640, 0 ).scale( -1, 1 );
-        //floor
-        this.floor = RectangleShape({width:SCREEN_X,height:10,fill:'white'}).addChildTo(this);
-        this.floor.setPosition(SCREEN_X/2, 9*(SCREEN_Y/10));
-        this.floor.bounce = 0.6;
+        //floor_bottom
+        this.floor_bottom = Sprite('bar').addChildTo(this).setPosition(SCREEN_X/2, 9*(SCREEN_Y/10));
+        this.floor_bottom.setSize(SCREEN_X,10);
+        this.floor_bottom.bounce = 0.8;
+        //floor_top
+        this.floor_top = Sprite('bar').addChildTo(this).setPosition(SCREEN_X/2, 0);
+        this.floor_top.setSize(SCREEN_X,10);
+        this.floor_top.bounce = 0.8;
+        //floor_right
+        this.floor_right = Sprite('bar').addChildTo(this).setPosition(SCREEN_X, SCREEN_Y/2);
+        this.floor_right.setSize(10,SCREEN_Y);
+        this.floor_right.bounce = 0.8;
+        //floor_left
+        this.floor_left = Sprite('bar').addChildTo(this).setPosition(0, SCREEN_Y/2);
+        this.floor_left.setSize(10,SCREEN_Y);
+        this.floor_left.bounce = 0.8;
         //bar(player)
-        this.jumper = Cat('cat',60,70,320,380).addChildTo(this);
-        this.jumper.setPosition(this.jumper.x_pos,this.jumper.y_pos)
+        this.jumper = Cat('cat',60,70,320,360).addChildTo(this);
+        this.jumper.setPosition(this.jumper.x_pos,this.jumper.y_pos);
         this.jumper.setSize(this.jumper.x_size,this.jumper.y_size);
         this.jumper.physical.gravity.y = 0.5;
     },
     update: function(app){
         var jumper = this.jumper;
         const p = app.pointer;
-        if(p.getPointing()){
-            this.jumper.step();
+        if(p.getPointingStart()){
+            this.jumper.jump();
         }
         // this.elem.canvas.context.drawImage(player, 0, 0, SCREEN_X ,SCREEN_Y);
         // detectFace(runner);
         this.floor_collision();
     },
     floor_collision:function(){
-        if(this.jumper.hitTestElement(this.floor)){
-            this.jumper.physical.velocity.y *= -1*this.floor.bounce;
+        //bottom
+        if(this.jumper.hitTestElement(this.floor_bottom)){
+            this.jumper.physical.velocity.y *= -1*this.floor_bottom.bounce;
+            this.jumper.y-=2;
+        }
+        //top
+        if(this.jumper.hitTestElement(this.floor_top)){
+            this.jumper.physical.velocity.y *= -1*this.floor_top.bounce;
+            this.jumper.y+=2;
+        }
+        //right
+        if(this.jumper.hitTestElement(this.floor_right)){
+            this.jumper.physical.velocity.x *= -1*this.floor_right.bounce;
+            this.jumper.x-=2;
+        }
+        //left
+        if(this.jumper.hitTestElement(this.floor_left)){
+            this.jumper.physical.velocity.x *= -1*this.floor_left.bounce;
+            this.jumper.x+=2;
         }
     }
 });
@@ -76,15 +105,21 @@ phina.define('Cat', {
         this.time = 0;
     },
     update: function() {
-        this.time= (this.time+0.2)%3.14;
-        this.y_size = 5*Math.sin(this.time) + this.y_size_init-5;
-        this.y = -2.5*Math.sin(this.time) + this.y;
-        this.setSize(this.x_size,this.y_size);
+        // this.time= (this.time+0.2)%3.14;
+        // this.y_size = 5*Math.sin(this.time) + this.y_size_init-5;
+        // this.y = -2.5*Math.sin(this.time) + this.y;
+        // this.setSize(this.x_size,this.y_size);
     },
-    step:function(){
-        this.physical.velocity.y = 0;
-        this.physical.addForce(0,-15);
-    }
+    jump:function(){
+        if(this.physical.velocity.x >= 0){
+            this.physical.velocity.set(0,0);
+            this.physical.addForce(5,-15);
+        }
+        else{
+            this.physical.velocity.set(0,0);
+            this.physical.addForce(-5,-15);
+        }
+    },
 });
 //main function
 phina.main(function() {
