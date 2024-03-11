@@ -3,8 +3,6 @@ phina.globalize();
 //screen size
 let SCREEN_X = 640;
 let SCREEN_Y = 480;
-//start delay
-let DIREY = 120;
 //video img
 const player = document.getElementById('player');
 navigator.mediaDevices.getUserMedia({video:true, audio: false})
@@ -12,19 +10,27 @@ navigator.mediaDevices.getUserMedia({video:true, audio: false})
   player.srcObject = stream;
   player.play();
 });
-//face detection
-Promise.all([faceapi.nets.tinyFaceDetector.load("./models"),
-            faceapi.nets.faceLandmark68TinyNet.load('./models')]).then(detectFace)
-const options = new faceapi.TinyFaceDetectorOptions({inputSize:256,scoreThreshold:0.5});
-function detectFace(){
-    const result = faceapi.detectSingleFace(player,options).withFaceLandmarks(true);
-    if(!result) return;
-    console.log(result);
+//clmtrackr
+var tracker = new clm.tracker();
+tracker.init(pModel);
+tracker.start(player);
+//FaceDetector
+function detectFace(canvas){
+    var positions = tracker.getCurrentPosition();
+
+    if(positions.length != undefined){
+        drawMouseLine(canvas,positions);
+    }
+}
+function drawMouseLine(canvas,positions){
+    canvas.drawLine(positions[44][0]*2,positions[44][1]*2, positions[47][0]*2,positions[47][1]*2);
+    canvas.drawLine(positions[47][0]*2,positions[47][1]*2, positions[50][0]*2,positions[50][1]*2);
+    canvas.drawLine(positions[44][0]*2,positions[44][1]*2, positions[53][0]*2,positions[53][1]*2);
+    canvas.drawLine(positions[53][0]*2,positions[53][1]*2, positions[50][0]*2,positions[50][1]*2);
 }
 //img asset
 var ASSETS = {
     image: {
-      'cat': './Image/nyan.png',
       'apple':'./Image/apple.png',
       'bomb':'./Image/bomb.png'
     },
@@ -47,24 +53,14 @@ phina.define("MainScene", {
     update: function(app){
         // this.cat.x = app.pointer.x;
         this.elem.canvas.context.drawImage(player, 0, 0, SCREEN_X ,SCREEN_Y);
-        detectFace();
+        detectFace(this.elem.canvas);
         if(app.frame%30==0){
-            this.spawn_apple(Math.randint(0, SCREEN_X),-50);
+            this.spawn_apple(Math.randint(SCREEN_X/4, (SCREEN_X*3)/4),-50);
         }
     },
     spawn_apple(x,y) {
         Apple('apple',x,y).addChildTo(this.appleGroup);
       },
-});
-//Cat class
-phina.define('Cat', {
-    superClass: 'Sprite',
-    init: function(image) {
-        this.superInit(image);
-    },
-    update: function() {
-
-    },
 });
 //apple class
 phina.define('Apple', {
