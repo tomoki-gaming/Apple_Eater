@@ -19,14 +19,17 @@ function detectFace(canvas){
     var positions = tracker.getCurrentPosition();
 
     if(positions.length != undefined){
-        drawMouseLine(canvas,positions);
+        return drawMouseLine(canvas,positions);
     }
+    return 0;
 }
 function drawMouseLine(canvas,positions){
     canvas.drawLine(positions[44][0]*2,positions[44][1]*2, positions[47][0]*2,positions[47][1]*2);
     canvas.drawLine(positions[47][0]*2,positions[47][1]*2, positions[50][0]*2,positions[50][1]*2);
     canvas.drawLine(positions[44][0]*2,positions[44][1]*2, positions[53][0]*2,positions[53][1]*2);
     canvas.drawLine(positions[53][0]*2,positions[53][1]*2, positions[50][0]*2,positions[50][1]*2);
+    var pos = [positions[44][0]*2,positions[50][0]*2,positions[47][1]*2,positions[53][1]*2]
+    return pos;
 }
 //img asset
 var ASSETS = {
@@ -53,21 +56,29 @@ phina.define("MainScene", {
     update: function(app){
         // this.cat.x = app.pointer.x;
         this.elem.canvas.context.drawImage(player, 0, 0, SCREEN_X ,SCREEN_Y);
-        detectFace(this.elem.canvas);
+        var pos = detectFace(this.elem.canvas);
+        this.delete_apple(pos);
         if(app.frame%30==0){
             this.spawn_apple(Math.randint(SCREEN_X/4, (SCREEN_X*3)/4),-50);
         }
     },
     spawn_apple(x,y) {
         Apple('apple',x,y).addChildTo(this.appleGroup);
-      },
+    },
+    delete_apple(pos){
+        this.appleGroup.children.each(function(apple){
+            apple.delete_in_mouse(pos);
+        });
+    },
 });
 //apple class
 phina.define('Apple', {
     superClass: 'Sprite',
     init: function(image,x,y) {
         this.superInit(image);
-        this.setSize(50,50);
+        this.size = [50,50];
+        this.pad = 5;
+        this.setSize(this.size[0],this.size[1]);
         this.setPosition(x,y);
     },
     update: function() {
@@ -76,6 +87,13 @@ phina.define('Apple', {
             this.remove();
         }
     },
+    delete_in_mouse:function(pos){
+        if(SCREEN_X-this.x>=pos[0]+this.pad && SCREEN_X-this.x<=pos[1]-this.pad){
+            if(this.y>=pos[2]+this.pad && this.y<=pos[3]-this.pad){
+                this.remove();
+            }
+        }
+    }
 });
 //main function
 phina.main(function() {
