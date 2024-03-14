@@ -48,27 +48,35 @@ phina.define("MainScene", {
         this.elem  = PlainElement({width: SCREEN_X, height: SCREEN_Y}).addChildTo(this);
         this.elem.setPosition(SCREEN_X/2, SCREEN_Y/2);
         this.elem.canvas.translate( 640, 0 ).scale( -1, 1 );
-        //cat
-        // this.cat = Cat('cat').addChildTo(this).setSize(420,300).setPosition(SCREEN_X/2,SCREEN_Y/2);
         //apple
         this.appleGroup = DisplayElement().addChildTo(this);
+        //score_text
+        this.score = 0;
+        this.label = Label({text:'SCORE:'+this.score, fill:"white" ,align:'left'}).addChildTo(this);
+        this.label.setPosition(SCREEN_X/50, SCREEN_Y/15);
     },
     update: function(app){
         // this.cat.x = app.pointer.x;
         this.elem.canvas.context.drawImage(player, 0, 0, SCREEN_X ,SCREEN_Y);
         var pos = detectFace(this.elem.canvas);
-        this.delete_apple(pos);
+        var score = this.delete_apple(pos);
         if(app.frame%30==0){
             this.spawn_apple(Math.randint(SCREEN_X/4, (SCREEN_X*3)/4),-50);
+        }
+        if(score > 0){
+            this.score += score;
+            this.label.text = 'SCORE:'+this.score;
         }
     },
     spawn_apple(x,y) {
         Apple('apple',x,y).addChildTo(this.appleGroup);
     },
     delete_apple(pos){
+        var scores = 0;
         this.appleGroup.children.each(function(apple){
-            apple.delete_in_mouse(pos);
+            scores += apple.delete_in_mouse(pos);
         });
+        return scores;
     },
 });
 //apple class
@@ -91,8 +99,10 @@ phina.define('Apple', {
         if(SCREEN_X-this.x>=pos[0]+this.pad && SCREEN_X-this.x<=pos[1]-this.pad){
             if(this.y>=pos[2]+this.pad && this.y<=pos[3]-this.pad){
                 this.remove();
+                return 100; 
             }
         }
+        return 0;
     }
 });
 //main function
