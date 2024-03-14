@@ -3,6 +3,8 @@ phina.globalize();
 //screen size
 let SCREEN_X = 640;
 let SCREEN_Y = 480;
+//diley_time
+let DIREY = 120; 
 //video img
 const player = document.getElementById('player');
 navigator.mediaDevices.getUserMedia({video:true, audio: false})
@@ -38,6 +40,19 @@ var ASSETS = {
       'bomb':'./Image/bomb.png'
     },
   };
+//some scene
+var myScenes = [
+    {
+      label: 'Main',
+      className: 'MainScene',
+      nextLabel: '',
+    },
+    {
+      label: 'Title',
+      className: 'TitleScene',
+      nextLabel: '',
+    },
+];
 //Display class
 phina.define("MainScene", {
     superClass: 'DisplayScene',
@@ -54,12 +69,18 @@ phina.define("MainScene", {
         this.score = 0;
         this.label = Label({text:'SCORE:'+this.score, fill:"white" ,align:'left'}).addChildTo(this);
         this.label.setPosition(SCREEN_X/50, SCREEN_Y/15);
+        //failure_text
+        this.label_f = Label({text:'', fill:"red"}).addChildTo(this);
+        this.label_f.setPosition(SCREEN_X/2, SCREEN_Y/2);
+        //scene_count
+        this.flag = 0;
+        this.scene_count = 0;
     },
     update: function(app){
-        // this.cat.x = app.pointer.x;
+        var score;
         this.elem.canvas.context.drawImage(player, 0, 0, SCREEN_X ,SCREEN_Y);
         var pos = detectFace(this.elem.canvas);
-        var score = this.delete_apple(pos);
+        score , this.flag = this.delete_apple(pos);
         if(app.frame%30==0){
             this.spawn_apple(Math.randint(SCREEN_X/4, (SCREEN_X*3)/4),-50);
         }
@@ -67,16 +88,25 @@ phina.define("MainScene", {
             this.score += score;
             this.label.text = 'SCORE:'+this.score;
         }
+        if(this.flag > 0){
+            this.label_f.text = 'FAILURE';
+            this.scene_count += app.deltaTime;
+            if(this.scene_count > DIREY){
+                this.exit({nextLabel: 'main'});
+            }
+        }
     },
-    spawn_apple(x,y) {
+    spawn_apple:function(x,y) {
         Apple('apple',x,y).addChildTo(this.appleGroup);
     },
-    delete_apple(pos){
+    delete_apple:function(pos){
         var scores = 0;
+        var game_flag = 0;
         this.appleGroup.children.each(function(apple){
             scores += apple.delete_in_mouse(pos);
+            game_flag += apple.delete_under_frame();
         });
-        return scores;
+        return scores ,game_flag;
     },
 });
 //apple class
@@ -91,9 +121,6 @@ phina.define('Apple', {
     },
     update: function() {
         this.y +=1;
-        if(this.y > SCREEN_Y-15){
-            this.remove();
-        }
     },
     delete_in_mouse:function(pos){
         if(SCREEN_X-this.x>=pos[0]+this.pad && SCREEN_X-this.x<=pos[1]-this.pad){
@@ -101,6 +128,13 @@ phina.define('Apple', {
                 this.remove();
                 return 100; 
             }
+        }
+        return 0;
+    },
+    delete_under_frame:function(){
+        if(this.y > SCREEN_Y-15){
+            this.remove();
+            return 1;
         }
         return 0;
     }
