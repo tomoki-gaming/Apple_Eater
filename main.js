@@ -4,7 +4,7 @@ phina.globalize();
 let SCREEN_X = 640;
 let SCREEN_Y = 480;
 //diley_time
-let DIREY = 120; 
+let DIREY = 4000; 
 //video img
 const player = document.getElementById('player');
 navigator.mediaDevices.getUserMedia({video:true, audio: false})
@@ -77,23 +77,17 @@ phina.define("MainScene", {
         this.scene_count = 0;
     },
     update: function(app){
-        var score;
+        var score ,flag;
         this.elem.canvas.context.drawImage(player, 0, 0, SCREEN_X ,SCREEN_Y);
         var pos = detectFace(this.elem.canvas);
-        score , this.flag = this.delete_apple(pos);
-        if(app.frame%30==0){
+        score , flag = this.delete_apple(pos);
+        this.scene_trans(app,flag);
+        if(app.frame%30==0 && this.scene_count == 0){
             this.spawn_apple(Math.randint(SCREEN_X/4, (SCREEN_X*3)/4),-50);
         }
         if(score > 0){
             this.score += score;
             this.label.text = 'SCORE:'+this.score;
-        }
-        if(this.flag > 0){
-            this.label_f.text = 'FAILURE';
-            this.scene_count += app.deltaTime;
-            if(this.scene_count > DIREY){
-                this.exit({nextLabel: 'main'});
-            }
         }
     },
     spawn_apple:function(x,y) {
@@ -108,6 +102,19 @@ phina.define("MainScene", {
         });
         return scores ,game_flag;
     },
+    scene_trans:function(app,flag){
+        if(flag > 0) this.flag =1;
+        if(this.flag > 0){
+            if(this.scene_count > DIREY){
+                this.exit({nextLabel: 'main'});
+            }
+            else if(this.scene_count==0){
+                this.label_f.text = 'FAILURE';
+                this.appleGroup.remove();
+            }
+            this.scene_count += app.deltaTime;
+        }
+    }
 });
 //apple class
 phina.define('Apple', {
@@ -137,7 +144,7 @@ phina.define('Apple', {
             return 1;
         }
         return 0;
-    }
+    },
 });
 //main function
 phina.main(function() {
