@@ -36,8 +36,8 @@ function drawMouseLine(canvas,positions){
 //img asset
 var ASSETS = {
     image: {
-      'apple':'./Image/apple.png',
-      'bomb':'./Image/bomb.png'
+      'apple':'../Image/apple.png',
+      'bomb':'../Image/bomb.png'
     },
   };
 //some scene
