@@ -91,14 +91,25 @@ phina.define("MainScene", {
         }
     },
     spawn_apple:function(x,y) {
-        Apple('apple',x,y).addChildTo(this.appleGroup);
+        if (Math.randint(0, 20) < 20){
+            Apple('apple',x,y,'apple').addChildTo(this.appleGroup);
+        }
+        else{
+            Apple('bomb',x,y,'bomb').addChildTo(this.appleGroup);
+        }
     },
     delete_apple:function(pos){
         var scores = 0;
         var game_flag = 0;
         this.appleGroup.children.each(function(apple){
-            scores += apple.delete_in_mouse(pos);
-            game_flag += apple.delete_under_frame();
+            add_score = apple.delete_in_mouse(pos);
+            if(add_score>=0){
+                scores += add_score
+                game_flag += apple.delete_under_frame();
+            }
+            else{
+                game_flag = 1;
+            }
         });
         return scores ,game_flag;
     },
@@ -119,10 +130,11 @@ phina.define("MainScene", {
 //apple class
 phina.define('Apple', {
     superClass: 'Sprite',
-    init: function(image,x,y) {
+    init: function(image,x,y,object_name) {
         this.superInit(image);
         this.size = [50,50];
         this.pad = 5;
+        this.object_name = object_name;
         this.setSize(this.size[0],this.size[1]);
         this.setPosition(x,y);
     },
@@ -133,7 +145,12 @@ phina.define('Apple', {
         if(SCREEN_X-this.x>=pos[0]+this.pad && SCREEN_X-this.x<=pos[1]-this.pad){
             if(this.y>=pos[2]+this.pad && this.y<=pos[3]-this.pad){
                 this.remove();
-                return 100; 
+                if(this.object_name=='apple'){
+                    return 100;
+                }
+                else{
+                    return -100;
+                }
             }
         }
         return 0;
