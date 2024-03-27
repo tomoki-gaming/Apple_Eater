@@ -1,22 +1,15 @@
-//magic
-phina.globalize();
-//screen size
-let SCREEN_X = 640;
-let SCREEN_Y = 480;
-//diley_time
-let DIREY = 4000; 
-//video img
+//ビデオキャプチャ
 const player = document.getElementById('player');
 navigator.mediaDevices.getUserMedia({video:true, audio: false})
 .then(function(stream){
   player.srcObject = stream;
   player.play();
 });
-//clmtrackr
+//clmtrackr(顔ランドマーク認識)
 var tracker = new clm.tracker();
 tracker.init(pModel);
 tracker.start(player);
-//FaceDetector
+//顔認識
 function detectFace(canvas){
     var positions = tracker.getCurrentPosition();
 
@@ -33,46 +26,26 @@ function drawMouseLine(canvas,positions){
     var pos = [positions[44][0]*2,positions[50][0]*2,positions[47][1]*2,positions[53][1]*2]
     return pos;
 }
-//img asset
-var ASSETS = {
-    image: {
-      'apple':'../Image/apple.png',
-      'bomb':'../Image/bomb.png'
-    },
-  };
-//some scene
-var myScenes = [
-    {
-      label: 'Main',
-      className: 'MainScene',
-      nextLabel: '',
-    },
-    {
-      label: 'Title',
-      className: 'TitleScene',
-      nextLabel: '',
-    },
-];
-//Display class
+//メインシーン
 phina.define("MainScene", {
     superClass: 'DisplayScene',
     init: function(option) {
         this.superInit(option);
         this.backgroundColor = 'gray';
-        //video img
+        //ビデオ
         this.elem  = PlainElement({width: SCREEN_X, height: SCREEN_Y}).addChildTo(this);
         this.elem.setPosition(SCREEN_X/2, SCREEN_Y/2);
         this.elem.canvas.translate( 640, 0 ).scale( -1, 1 );
-        //apple
+        //リンゴ画像
         this.appleGroup = DisplayElement().addChildTo(this);
-        //score_text
+        //スコアのテキスト
         this.score = 0;
         this.label = Label({text:'SCORE:'+this.score, fill:"white" ,align:'left'}).addChildTo(this);
         this.label.setPosition(SCREEN_X/50, SCREEN_Y/15);
-        //failure_text
+        //失敗判定テキスト
         this.label_f = Label({text:'', fill:"red"}).addChildTo(this);
         this.label_f.setPosition(SCREEN_X/2, SCREEN_Y/2);
-        //scene_count
+        //シーン遷移のフラグとカウント
         this.flag = 0;
         this.scene_count = 0;
     },
@@ -85,18 +58,14 @@ phina.define("MainScene", {
         if(app.frame%30==0 && this.scene_count == 0){
             this.spawn_apple(Math.randint(SCREEN_X/4, (SCREEN_X*3)/4),-50);
         }
-        if(score > 0){
+        if(score){
             this.score += score;
             this.label.text = 'SCORE:'+this.score;
         }
     },
     spawn_apple:function(x,y) {
-        if (Math.randint(0, 20) < 20){
-            Apple('apple',x,y,'apple').addChildTo(this.appleGroup);
-        }
-        else{
-            Apple('bomb',x,y,'bomb').addChildTo(this.appleGroup);
-        }
+        if (Math.randint(0, 20) < 20) Apple('apple',x,y,'apple').addChildTo(this.appleGroup);
+        else Apple('bomb',x,y,'bomb').addChildTo(this.appleGroup);
     },
     delete_apple:function(pos){
         var scores = 0;
@@ -127,43 +96,7 @@ phina.define("MainScene", {
         }
     }
 });
-//apple class
-phina.define('Apple', {
-    superClass: 'Sprite',
-    init: function(image,x,y,object_name) {
-        this.superInit(image);
-        this.size = [50,50];
-        this.pad = 5;
-        this.object_name = object_name;
-        this.setSize(this.size[0],this.size[1]);
-        this.setPosition(x,y);
-    },
-    update: function() {
-        this.y +=1;
-    },
-    delete_in_mouse:function(pos){
-        if(SCREEN_X-this.x>=pos[0]+this.pad && SCREEN_X-this.x<=pos[1]-this.pad){
-            if(this.y>=pos[2]+this.pad && this.y<=pos[3]-this.pad){
-                this.remove();
-                if(this.object_name=='apple'){
-                    return 100;
-                }
-                else{
-                    return -100;
-                }
-            }
-        }
-        return 0;
-    },
-    delete_under_frame:function(){
-        if(this.y > SCREEN_Y-15){
-            this.remove();
-            return 1;
-        }
-        return 0;
-    },
-});
-//main function
+//メイン関数
 phina.main(function() {
     var app = GameApp({startLabel: 'main', width: SCREEN_X, height: SCREEN_Y, assets: ASSETS});
     app.run();
